@@ -1,0 +1,10 @@
+services:
+  redforge-api:
+    build:
+      context: .
+    container_name: redforge-api
+    ports:
+      - "8000:8000"
+    environment:
+      REDFORGE_ENV: development
+      REDFORGE_LOG_LEVEL: INFO
