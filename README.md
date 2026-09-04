@@ -1,4 +1,7 @@
-# RedForge AI
+<p align="center">
+  <img src="docs/images/redforge_ai.png" alt="RedForge AI" width="420">
+</p>
+
 
 RedForge AI is an agentic software engineering platform designed to transform software issues into verified, human-approved pull requests.
 
