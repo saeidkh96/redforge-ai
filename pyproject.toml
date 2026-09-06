@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "redforge-ai"
-version = "1.0.0"
-description = "Agentic software engineering platform for repository understanding, planning, coding, testing, verification, and human-approved pull requests."
+version = "1.1.0"
+description = "Agentic software engineering platform for repository understanding, planning, coding, testing, repair, verification, and human-approved pull requests."
 readme = "README.md"
 requires-python = ">=3.14"
 license = "MIT"

@@ -16,6 +16,8 @@ class RunStatus(StrEnum):
     PLANNED = "planned"
     PATCH_READY = "patch_ready"
     TESTED = "tested"
+    REPAIRING = "repairing"
+    REPAIRED = "repaired"
     VERIFIED = "verified"
     AWAITING_APPROVAL = "awaiting_approval"
     APPROVED = "approved"
@@ -78,6 +80,13 @@ class TestRun(BaseModel):
         return bool(self.results) and all(result.passed for result in self.results)
 
 
+class RepairAttempt(BaseModel):
+    attempt: int
+    patch: Patch
+    tests: TestRun
+    applied: bool = False
+
+
 class Finding(BaseModel):
     source: str
     severity: RiskLevel
@@ -122,6 +131,7 @@ class ForgeRun(BaseModel):
     plan: Plan | None = None
     patch: Patch | None = None
     tests: TestRun | None = None
+    repair_attempts: list[RepairAttempt] = Field(default_factory=list)
     verification: VerificationReport | None = None
     approval: Approval | None = None
     pull_request: PullRequest | None = None
