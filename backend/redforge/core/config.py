@@ -6,23 +6,37 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     app_name: str = "RedForge AI"
-    version: str = "1.1.0"
+    version: str = "1.2.0"
     environment: Literal["development", "test", "production"] = "development"
     host: str = "0.0.0.0"
     port: int = 8000
     log_level: str = "INFO"
     workspace_root: str | None = None
+
     llm_base_url: str | None = None
     llm_model: str | None = None
     llm_api_key: str | None = None
+
     repair_on_failure: bool = True
     max_repair_attempts: int = 2
+
+    production_runtime_enabled: bool = True
+    advanced_verification_enabled: bool = True
+    minimum_coverage: float = 70.0
+    allowed_egress_hosts: str = ""
+    audit_log_path: str | None = None
+    max_concurrent_runs: int = 4
+    multi_agent_required_approvals: int = 2
 
     model_config = SettingsConfigDict(
         env_prefix="REDFORGE_",
         env_file=".env",
         extra="ignore",
     )
+
+    @property
+    def egress_host_set(self) -> set[str]:
+        return {host.strip() for host in self.allowed_egress_hosts.split(",") if host.strip()}
 
 
 @lru_cache
