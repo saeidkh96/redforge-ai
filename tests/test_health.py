@@ -6,21 +6,19 @@ client = TestClient(app)
 
 def test_health() -> None:
     response = client.get("/health")
-
     assert response.status_code == 200
     assert response.json() == {
         "service": "redforge-ai",
         "status": "healthy",
-        "version": "0.0.1",
+        "version": "1.0.0",
     }
 
 
 def test_ready() -> None:
     response = client.get("/ready")
-
     assert response.status_code == 200
     assert response.json() == {
         "service": "redforge-ai",
         "status": "ready",
-        "version": "0.0.1",
+        "version": "1.0.0",
     }

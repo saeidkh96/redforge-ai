@@ -23,20 +23,10 @@ class ReadinessResponse(BaseModel):
 @router.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
     settings = get_settings()
-
-    return HealthResponse(
-        service="redforge-ai",
-        status="healthy",
-        version=settings.version,
-    )
+    return HealthResponse(service="redforge-ai", status="healthy", version=settings.version)
 
 
 @router.get("/ready", response_model=ReadinessResponse)
 def ready() -> ReadinessResponse:
     settings = get_settings()
-
-    return ReadinessResponse(
-        service="redforge-ai",
-        status="ready",
-        version=settings.version,
-    )
+    return ReadinessResponse(service="redforge-ai", status="ready", version=settings.version)

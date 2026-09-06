@@ -1,0 +1,142 @@
+{
+  "id": "a3772931-de86-43c7-aea1-ba1897465f1e",
+  "created_at": "2026-09-06T13:18:57.625880Z",
+  "updated_at": "2026-09-06T13:18:59.990006Z",
+  "status": "awaiting_approval",
+  "repository_path": "C:\\Users\\saeed\\Desktop\\redforge-ai",
+  "issue": {
+    "title": "Smoke test RedForge v1.0.0",
+    "body": "Validate the end-to-end ForgeRun workflow without generating a patch.",
+    "labels": []
+  },
+  "repository_summary": "redforge-ai: 78 files; project types: Docker, Python; frameworks: FastAPI; languages: Markdown (5), PowerShell (1), Python (64), TOML (1), YAML (2); tests: 13; dependencies: 9; symbols: 145.",
+  "plan": {
+    "summary": "Plan for: Smoke test RedForge v1.0.0",
+    "steps": [
+      {
+        "order": 1,
+        "title": "Understand affected code",
+        "description": "Review repository context, relevant symbols, dependencies, tests, and entry points.",
+        "target_files": [
+          "backend/redforge/api/forge.py",
+          "backend/redforge/main.py",
+          "backend/redforge/__init__.py",
+          "backend/redforge/agents/__init__.py",
+          "backend/redforge/agents/coding.py",
+          "backend/redforge/agents/gateway.py",
+          "backend/redforge/agents/reviewer.py",
+          "backend/redforge/api/__init__.py"
+        ],
+        "verification": [
+          "Repository snapshot remains reproducible"
+        ]
+      },
+      {
+        "order": 2,
+        "title": "Implement minimal patch",
+        "description": "Implement the smallest safe change that addresses: Smoke test RedForge v1.0.0",
+        "target_files": [
+          "backend/redforge/api/forge.py",
+          "backend/redforge/main.py",
+          "backend/redforge/__init__.py",
+          "backend/redforge/agents/__init__.py",
+          "backend/redforge/agents/coding.py",
+          "backend/redforge/agents/gateway.py",
+          "backend/redforge/agents/reviewer.py",
+          "backend/redforge/api/__init__.py"
+        ],
+        "verification": [
+          "Patch applies cleanly",
+          "No unrelated files are modified"
+        ]
+      },
+      {
+        "order": 3,
+        "title": "Validate change",
+        "description": "Run repository-native tests and deterministic verification checks.",
+        "target_files": [
+          "tests/agents_test.py",
+          "tests/approval/test_engine.py",
+          "tests/core/test_orchestrator.py",
+          "tests/execution/test_patches.py",
+          "tests/planning/test_engine.py",
+          "tests/repository/test_dependencies.py",
+          "tests/repository/test_git.py",
+          "tests/repository/test_repository_api.py",
+          "tests/repository/test_scanner.py",
+          "tests/repository/test_symbols.py"
+        ],
+        "verification": [
+          "Tests pass",
+          "Security scan has no blocking findings"
+        ]
+      }
+    ],
+    "risks": [
+      "Repository already contains uncommitted changes."
+    ]
+  },
+  "patch": null,
+  "tests": {
+    "results": [
+      {
+        "command": [
+          "python",
+          "-m",
+          "pytest",
+          "-q"
+        ],
+        "return_code": 1,
+        "stdout": "",
+        "stderr": "C:\\Users\\saeed\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n",
+        "duration_seconds": 0.04996229987591505,
+        "timed_out": false
+      }
+    ]
+  },
+  "verification": {
+    "commands": [
+      {
+        "command": [
+          "python",
+          "-m",
+          "ruff",
+          "check",
+          "."
+        ],
+        "return_code": 1,
+        "stdout": "",
+        "stderr": "C:\\Users\\saeed\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named ruff\n",
+        "duration_seconds": 0.046865500044077635,
+        "timed_out": false
+      },
+      {
+        "command": [
+          "python",
+          "-m",
+          "pytest",
+          "-q"
+        ],
+        "return_code": 1,
+        "stdout": "",
+        "stderr": "C:\\Users\\saeed\\AppData\\Local\\Programs\\Python\\Python314\\python.exe: No module named pytest\n",
+        "duration_seconds": 0.04475139989517629,
+        "timed_out": false
+      }
+    ],
+    "findings": [],
+    "passed": false
+  },
+  "approval": {
+    "approved": false,
+    "required": true,
+    "risk": "low",
+    "reasons": [
+      "Verification did not pass."
+    ],
+    "approver": null,
+    "approved_at": null
+  },
+  "pull_request": null,
+  "error": null
+}

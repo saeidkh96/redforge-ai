@@ -1,0 +1,45 @@
+from pathlib import Path
+
+_EXTENSION_TO_LANGUAGE: dict[str, str] = {
+    ".py": "Python",
+    ".pyi": "Python",
+    ".js": "JavaScript",
+    ".jsx": "JavaScript",
+    ".ts": "TypeScript",
+    ".tsx": "TypeScript",
+    ".java": "Java",
+    ".kt": "Kotlin",
+    ".kts": "Kotlin",
+    ".go": "Go",
+    ".rs": "Rust",
+    ".c": "C",
+    ".h": "C",
+    ".cpp": "C++",
+    ".cc": "C++",
+    ".cxx": "C++",
+    ".hpp": "C++",
+    ".cs": "C#",
+    ".rb": "Ruby",
+    ".php": "PHP",
+    ".swift": "Swift",
+    ".scala": "Scala",
+    ".sh": "Shell",
+    ".bash": "Shell",
+    ".ps1": "PowerShell",
+    ".sql": "SQL",
+    ".html": "HTML",
+    ".htm": "HTML",
+    ".css": "CSS",
+    ".scss": "SCSS",
+    ".sass": "Sass",
+    ".json": "JSON",
+    ".yaml": "YAML",
+    ".yml": "YAML",
+    ".toml": "TOML",
+    ".xml": "XML",
+    ".md": "Markdown",
+}
+
+
+def detect_language(path: Path) -> str | None:
+    return _EXTENSION_TO_LANGUAGE.get(path.suffix.lower())
