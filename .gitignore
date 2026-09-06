@@ -34,3 +34,5 @@ Thumbs.db
 build/
 dist/
 *.egg-info/
+# RedForge runtime state
+.redforge/
