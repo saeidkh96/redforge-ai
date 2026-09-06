@@ -10,7 +10,7 @@ def test_health() -> None:
     assert response.json() == {
         "service": "redforge-ai",
         "status": "healthy",
-        "version": "1.0.0",
+        "version": "1.1.0",
     }
 
 
@@ -20,5 +20,5 @@ def test_ready() -> None:
     assert response.json() == {
         "service": "redforge-ai",
         "status": "ready",
-        "version": "1.0.0",
+        "version": "1.1.0",
     }

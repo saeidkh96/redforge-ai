@@ -8,7 +8,24 @@ RedForge AI is an agentic software engineering platform designed around a verifi
 
 **Issue → Repository Understanding → Plan → Code → Test → Repair → Security / Regression Check → Human Approval → Pull Request**
 
-## v1.0.0 capabilities
+> **Generation proposes. Verification decides.**
+
+## v1.1.0 — Automated Repair Loop
+
+v1.1.0 upgrades the Repair Agent from a standalone contract into a bounded **Test → Repair → Retest** workflow.
+
+When an applied AI-generated patch fails repository-native tests, RedForge can request a minimal repair patch, validate it with Git, apply it, rerun tests, and repeat only up to a configured attempt limit. Every repair attempt is persisted in the `ForgeRun` audit record.
+
+Repair runs only when all of the following are true:
+
+- patch generation is enabled,
+- patch application is enabled,
+- an LLM provider is configured,
+- tests fail,
+- repair-on-failure is enabled,
+- the configured attempt limit has not been reached.
+
+## Platform capabilities
 
 - Repository intelligence: files, languages, manifests, frameworks, project types, Git state, dependency inventory, and Python symbol indexing.
 - Deterministic issue planning with repository-aware target selection and risk notes.
@@ -16,18 +33,13 @@ RedForge AI is an agentic software engineering platform designed around a verifi
 - Coding-agent contract that accepts structured JSON and produces a unified Git patch.
 - Patch preflight and application through `git apply`.
 - Repository-native test command detection and subprocess execution with timeouts.
-- Repair-agent contract for failed test runs.
+- Bounded automated repair loop with persisted evidence.
 - Deterministic security checks for risky Python execution patterns and likely hard-coded secrets.
 - Verification engine combining quality/test commands with security findings.
 - Risk-based human approval policy.
 - Git workspace helpers and GitHub pull-request client.
 - Persistent `ForgeRun` audit records.
 - FastAPI endpoints for repository scanning and end-to-end forge runs.
-- Optional workspace-root restriction for local-path API scanning.
-
-## Important design rule
-
-LLMs are not treated as the source of truth. Patch generation and semantic review are separated from deterministic test, security, Git, and verification layers.
 
 ## Quick start
 
@@ -35,6 +47,7 @@ LLMs are not treated as the source of truth. Patch generation and semantic revie
 python -m pip install -e ".[dev]"
 python -m ruff check .
 python -m pytest -q
+python -m mypy backend\redforge
 python -m uvicorn redforge.main:app --app-dir backend --reload
 ```
 
@@ -51,7 +64,23 @@ Forge workflow:
 
 - `POST /api/v1/forge/runs`
 
-By default, a Forge run performs repository understanding, planning, tests, verification, security evaluation, and approval evaluation. LLM patch generation is opt-in and requires an OpenAI-compatible provider configuration.
+## Repair configuration
+
+```env
+REDFORGE_REPAIR_ON_FAILURE=true
+REDFORGE_MAX_REPAIR_ATTEMPTS=2
+```
+
+Per-run API overrides:
+
+```json
+{
+  "generate_patch": true,
+  "apply_patch": true,
+  "repair_on_failure": true,
+  "max_repair_attempts": 2
+}
+```
 
 ## LLM provider configuration
 
@@ -61,19 +90,13 @@ REDFORGE_LLM_MODEL=qwen2.5-coder:7b
 REDFORGE_LLM_API_KEY=
 ```
 
-## Local path security
+## Roadmap
 
-For API deployments, configure an allowed workspace root:
+The roadmap from **v1.1.0 through v2.0.0** is documented in `docs/ROADMAP_V2.md`.
 
-```env
-REDFORGE_WORKSPACE_ROOT=C:\Users\saeed\Desktop
-```
+The major direction is production hardening: advanced verification, sandboxed execution, runtime identity and permissions, egress controls, tamper-resistant audit evidence, reviewer reliability, multi-agent verification, GitHub workflow automation, and observability/scale.
 
-Paths outside this directory are rejected by the repository scan API.
-
-## Status
-
-`v1.0.0` establishes the first complete platform workflow and the interfaces required for future production hardening. External LLM quality, repository-specific build systems, branch protection, credential management, sandbox isolation, and GitHub permissions remain deployment concerns rather than assumptions made by the core platform.
+Only capabilities implemented in the current release should be treated as shipped functionality.
 
 ## License
 

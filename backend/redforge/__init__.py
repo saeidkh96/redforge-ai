@@ -1,1 +1,3 @@
-__version__ = "1.0.0"
+"""RedForge AI package."""
+
+__version__ = "1.1.0"
