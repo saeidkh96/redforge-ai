@@ -1,0 +1,128 @@
+from __future__ import annotations
+
+from datetime import UTC, datetime
+from enum import StrEnum
+from uuid import uuid4
+
+from pydantic import BaseModel, Field
+
+
+def utc_now() -> datetime:
+    return datetime.now(UTC)
+
+
+class RunStatus(StrEnum):
+    CREATED = "created"
+    PLANNED = "planned"
+    PATCH_READY = "patch_ready"
+    TESTED = "tested"
+    VERIFIED = "verified"
+    AWAITING_APPROVAL = "awaiting_approval"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+class RiskLevel(StrEnum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+
+class Issue(BaseModel):
+    title: str
+    body: str = ""
+    labels: list[str] = Field(default_factory=list)
+
+
+class PlanStep(BaseModel):
+    order: int
+    title: str
+    description: str
+    target_files: list[str] = Field(default_factory=list)
+    verification: list[str] = Field(default_factory=list)
+
+
+class Plan(BaseModel):
+    summary: str
+    steps: list[PlanStep] = Field(default_factory=list)
+    risks: list[str] = Field(default_factory=list)
+
+
+class Patch(BaseModel):
+    diff: str
+    rationale: str = ""
+    files: list[str] = Field(default_factory=list)
+
+
+class CommandResult(BaseModel):
+    command: list[str]
+    return_code: int
+    stdout: str = ""
+    stderr: str = ""
+    duration_seconds: float = 0.0
+    timed_out: bool = False
+
+    @property
+    def passed(self) -> bool:
+        return self.return_code == 0 and not self.timed_out
+
+
+class TestRun(BaseModel):
+    results: list[CommandResult] = Field(default_factory=list)
+
+    @property
+    def passed(self) -> bool:
+        return bool(self.results) and all(result.passed for result in self.results)
+
+
+class Finding(BaseModel):
+    source: str
+    severity: RiskLevel
+    message: str
+    path: str | None = None
+    line: int | None = None
+    rule_id: str | None = None
+
+
+class VerificationReport(BaseModel):
+    commands: list[CommandResult] = Field(default_factory=list)
+    findings: list[Finding] = Field(default_factory=list)
+    passed: bool = False
+
+
+class Approval(BaseModel):
+    approved: bool = False
+    required: bool = True
+    risk: RiskLevel = RiskLevel.LOW
+    reasons: list[str] = Field(default_factory=list)
+    approver: str | None = None
+    approved_at: datetime | None = None
+
+
+class PullRequest(BaseModel):
+    number: int | None = None
+    url: str | None = None
+    title: str
+    body: str = ""
+    head: str
+    base: str = "main"
+
+
+class ForgeRun(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid4()))
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
+    status: RunStatus = RunStatus.CREATED
+    repository_path: str
+    issue: Issue
+    repository_summary: str | None = None
+    plan: Plan | None = None
+    patch: Patch | None = None
+    tests: TestRun | None = None
+    verification: VerificationReport | None = None
+    approval: Approval | None = None
+    pull_request: PullRequest | None = None
+    error: str | None = None

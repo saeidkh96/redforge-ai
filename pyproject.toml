@@ -4,15 +4,12 @@ build-backend = "hatchling.build"
 
 [project]
 name = "redforge-ai"
-version = "0.0.1"
+version = "1.0.0"
 description = "Agentic software engineering platform for repository understanding, planning, coding, testing, verification, and human-approved pull requests."
 readme = "README.md"
 requires-python = ">=3.14"
-license = { text = "MIT" }
-authors = [
-    { name = "Saeid Khalilian" }
-]
-
+license = "MIT"
+authors = [{ name = "Saeid Khalilian" }]
 dependencies = [
     "fastapi>=0.116.0",
     "uvicorn[standard]>=0.35.0",
@@ -42,13 +39,7 @@ target-version = "py314"
 line-length = 100
 
 [tool.ruff.lint]
-select = [
-    "E",
-    "F",
-    "I",
-    "B",
-    "UP",
-]
+select = ["E", "F", "I", "B", "UP"]
 
 [tool.mypy]
 python_version = "3.14"
