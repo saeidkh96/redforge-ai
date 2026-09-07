@@ -15,14 +15,11 @@ from redforge.production.models import (
 from redforge.production.observability import MetricsRegistry
 from redforge.production.policy import AuthorizationEngine, RuntimePolicy
 from redforge.production.sandbox import SandboxedCommandRunner
-from redforge.verification.advanced import (
-    AdvancedVerificationEngine,
-    VerificationProfile,
-)
+from redforge.verification.advanced import AdvancedVerificationEngine, VerificationProfile
 
 
 class ProductionRuntime:
-    """Unified enforcement boundary for RedForge autonomous actions."""
+    """Unified enforcement and evidence boundary for RedForge runs."""
 
     def __init__(
         self,
@@ -47,6 +44,7 @@ class ProductionRuntime:
                 Permission.READ_REPOSITORY,
                 Permission.WRITE_REPOSITORY,
                 Permission.EXECUTE_COMMAND,
+                Permission.NETWORK_EGRESS,
                 Permission.CREATE_BRANCH,
                 Permission.CREATE_COMMIT,
                 Permission.CREATE_PULL_REQUEST,
@@ -54,9 +52,11 @@ class ProductionRuntime:
         )
         self.audit = HashChainAuditLog(audit_path or root / ".redforge" / "audit" / "events.jsonl")
         self.runner = SandboxedCommandRunner(self.authorization, self.principal)
+        self.policy_decisions: list[PolicyDecision] = []
 
     def authorize(self, action: RuntimeAction) -> PolicyDecision:
         decision = self.authorization.evaluate(self.principal, action)
+        self.policy_decisions.append(decision)
         self.audit.append(
             event_type="policy_decision",
             actor=self.principal.id,
@@ -86,7 +86,6 @@ class ProductionRuntime:
                 self.runner,
                 profile=profile,
             ).verify(self.root)
-
         self.audit.append(
             event_type="verification_completed",
             actor=self.principal.id,
@@ -100,9 +99,39 @@ class ProductionRuntime:
         )
         return report
 
+    def record_run_gate(self, *, approved: bool, risk_score: float) -> None:
+        self.audit.append(
+            event_type="run_gate_evaluated",
+            actor=self.principal.id,
+            action="evaluate_run_gate",
+            resource=str(self.root),
+            payload={"approved": approved, "risk_score": risk_score},
+        )
+        self.metrics.increment("run_gate_approved" if approved else "run_gate_blocked")
+
+    def record_delivery(
+        self,
+        *,
+        run_id: str,
+        branch: str,
+        pull_request_url: str | None,
+    ) -> None:
+        self.audit.append(
+            event_type="delivery_completed",
+            actor=self.principal.id,
+            action="publish_run",
+            resource=run_id,
+            payload={
+                "branch": branch,
+                "pull_request_url": pull_request_url,
+            },
+        )
+        self.metrics.increment("delivery_completed")
+
     def evidence(self) -> RuntimeEvidence:
         return RuntimeEvidence(
             audit_chain_valid=self.audit.verify(),
+            policy_decisions=list(self.policy_decisions),
             metrics=self.metrics.snapshot(),
         )
 

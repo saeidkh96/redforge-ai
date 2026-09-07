@@ -16,6 +16,12 @@ class GitWorkspace:
         self._run(root, "commit", "-m", message)
         return self._run(root, "rev-parse", "HEAD")
 
+    def push(self, root: str | Path, remote: str, branch: str) -> None:
+        self._run(root, "push", "-u", remote, branch)
+
+    def remote_url(self, root: str | Path, remote: str = "origin") -> str:
+        return self._run(root, "remote", "get-url", remote)
+
     @staticmethod
     def _run(root: str | Path, *args: str) -> str:
         result = subprocess.run(

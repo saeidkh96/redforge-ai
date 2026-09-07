@@ -6,6 +6,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from redforge.models import RiskLevel
+
 
 class Decision(StrEnum):
     ALLOW = "allow"
@@ -95,3 +97,9 @@ class RuntimeEvidence(BaseModel):
     reviewer_scores: list[ReviewerScore] = Field(default_factory=list)
     consensus: ConsensusResult | None = None
     metrics: dict[str, float] = Field(default_factory=dict)
+
+
+class RiskAssessment(BaseModel):
+    score: float = Field(ge=0.0, le=100.0)
+    level: RiskLevel
+    reasons: list[str] = Field(default_factory=list)

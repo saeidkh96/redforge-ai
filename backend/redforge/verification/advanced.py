@@ -37,12 +37,34 @@ class AdvancedVerificationEngine:
         findings: list[Finding] = []
 
         checks: list[tuple[str, list[str], bool]] = []
+
         if self.profile.run_ruff:
-            checks.append(("ruff", ["python", "-m", "ruff", "check", "."], False))
+            checks.append(
+                (
+                    "ruff",
+                    ["python", "-m", "ruff", "check", "."],
+                    False,
+                )
+            )
+
         if self.profile.run_mypy:
-            checks.append(("mypy", ["python", "-m", "mypy", "backend", "redforge"], False))
+            checks.append(
+                (
+                    "mypy",
+                    ["python", "-m", "mypy", "backend/redforge"],
+                    False,
+                )
+            )
+
         if self.profile.run_pytest:
-            checks.append(("pytest", ["python", "-m", "pytest", "-q"], False))
+            checks.append(
+                (
+                    "pytest",
+                    ["python", "-m", "pytest", "-q"],
+                    False,
+                )
+            )
+
         if self.profile.run_coverage:
             checks.append(
                 (
@@ -58,26 +80,50 @@ class AdvancedVerificationEngine:
                     False,
                 )
             )
+
         if self.profile.run_bandit:
             checks.append(
-                ("bandit", ["python", "-m", "bandit", "-r", "backend/redforge", "-q"], True)
+                (
+                    "bandit",
+                    [
+                        "python",
+                        "-m",
+                        "bandit",
+                        "-r",
+                        "backend/redforge",
+                        "-q",
+                    ],
+                    True,
+                )
             )
+
         if self.profile.run_semgrep:
             checks.append(
                 (
                     "semgrep",
-                    ["python", "-m", "semgrep", "scan", "--config", "auto", "backend/redforge"],
+                    [
+                        "python",
+                        "-m",
+                        "semgrep",
+                        "scan",
+                        "--config",
+                        "auto",
+                        "backend/redforge",
+                    ],
                     True,
                 )
             )
 
         blocking_failure = False
+
         for name, command, optional in checks:
             result = self.runner.run(root_path, command)
             commands.append(result)
+
             unavailable = result.return_code != 0 and "No module named" in (
                 result.stderr + result.stdout
             )
+
             if unavailable and optional:
                 findings.append(
                     Finding(
@@ -88,6 +134,7 @@ class AdvancedVerificationEngine:
                     )
                 )
                 continue
+
             if not result.passed:
                 blocking_failure = True
                 findings.append(
@@ -103,10 +150,12 @@ class AdvancedVerificationEngine:
 
         if self.profile.run_coverage:
             coverage_path = root_path / "coverage.json"
+
             if coverage_path.exists():
                 try:
                     data = json.loads(coverage_path.read_text(encoding="utf-8"))
                     percent = float(data["totals"]["percent_covered"])
+
                     if percent < self.profile.minimum_coverage:
                         blocking_failure = True
                         findings.append(
@@ -120,6 +169,7 @@ class AdvancedVerificationEngine:
                                 rule_id="coverage.minimum",
                             )
                         )
+
                 except KeyError, ValueError, json.JSONDecodeError:
                     findings.append(
                         Finding(
@@ -132,18 +182,22 @@ class AdvancedVerificationEngine:
 
         if self.profile.regression_baseline:
             baseline = self.profile.regression_baseline
+
             if baseline.exists():
                 expected = {
                     line.strip()
                     for line in baseline.read_text(encoding="utf-8").splitlines()
                     if line.strip()
                 }
+
                 current = {
                     finding.rule_id or finding.message
                     for finding in findings
                     if finding.severity in {RiskLevel.HIGH, RiskLevel.CRITICAL}
                 }
+
                 new_regressions = current - expected
+
                 for regression in sorted(new_regressions):
                     blocking_failure = True
                     findings.append(
@@ -158,6 +212,7 @@ class AdvancedVerificationEngine:
         blocking_findings = any(
             finding.severity in {RiskLevel.HIGH, RiskLevel.CRITICAL} for finding in findings
         )
+
         return VerificationReport(
             commands=commands,
             findings=findings,

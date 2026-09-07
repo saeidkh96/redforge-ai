@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     app_name: str = "RedForge AI"
-    version: str = "1.2.0"
+    version: str = "1.3.0"
     environment: Literal["development", "test", "production"] = "development"
     host: str = "0.0.0.0"
     port: int = 8000
@@ -27,6 +27,8 @@ class Settings(BaseSettings):
     audit_log_path: str | None = None
     max_concurrent_runs: int = 4
     multi_agent_required_approvals: int = 2
+    e2e_integration_enabled: bool = True
+    human_approval_risk_threshold: float = 20.0
 
     model_config = SettingsConfigDict(
         env_prefix="REDFORGE_",
