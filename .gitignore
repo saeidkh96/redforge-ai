@@ -36,3 +36,6 @@ dist/
 *.egg-info/
 # RedForge runtime state
 .redforge/
+
+# Verification artifacts
+coverage.json

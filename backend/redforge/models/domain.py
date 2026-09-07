@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from enum import StrEnum
+from typing import Any
 from uuid import uuid4
 
 from pydantic import BaseModel, Field
@@ -18,10 +19,14 @@ class RunStatus(StrEnum):
     TESTED = "tested"
     REPAIRING = "repairing"
     REPAIRED = "repaired"
+    VERIFYING = "verifying"
     VERIFIED = "verified"
+    REVIEWING = "reviewing"
+    REVIEWED = "reviewed"
     AWAITING_APPROVAL = "awaiting_approval"
     APPROVED = "approved"
     REJECTED = "rejected"
+    DELIVERY_READY = "delivery_ready"
     COMPLETED = "completed"
     FAILED = "failed"
 
@@ -133,6 +138,12 @@ class ForgeRun(BaseModel):
     tests: TestRun | None = None
     repair_attempts: list[RepairAttempt] = Field(default_factory=list)
     verification: VerificationReport | None = None
+    policy_decisions: list[dict[str, Any]] = Field(default_factory=list)
+    risk_assessment: dict[str, Any] | None = None
+    review_consensus: dict[str, Any] | None = None
+    runtime_evidence: dict[str, Any] | None = None
     approval: Approval | None = None
     pull_request: PullRequest | None = None
+    delivery_ready: bool = False
+    pending_action: str | None = None
     error: str | None = None
