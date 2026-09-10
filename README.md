@@ -13,16 +13,17 @@ RedForge AI is designed around a controlled software-engineering workflow rather
 **Issue → Repository Understanding → Plan → Code → Patch → Test → Repair → Advanced Verification → Runtime Policy → Risk Evaluation → Deterministic Review → Human Approval → Audit → GitHub Delivery**
 
 ## v1.5.0 - Autonomous Runtime Integration
-RedForge AI v1.5.0 is the first integration milestone after v1.4.0. It connects the existing ForgeRun production pipeline with the autonomous graph, checkpointing, deeper impact analysis, engineering memory, specialized agent roles, Docker execution, evaluation foundations, and controlled release gating.
 
-### Roadmap delivered in this milestone
+RedForge AI v1.5.0 is the first integration milestone after v1.4.0. It connects the existing ForgeRun production pipeline with autonomous graph orchestration, checkpointing, repository impact analysis, engineering memory, Docker execution evidence, and controlled release gating.
 
-- **v1.5.0:** Autonomous Runtime Integration
-- **v1.6.0:** GitHub Issue Automation foundations
-- **v1.7.0:** Deep Repository Intelligence
-- **v1.8.0:** Specialized Agent Intelligence + Engineering Memory
-- **v1.9.0:** Evaluation and Reliability
-- **v2.0.0:** Production Hardening and Release Gates
+## Roadmap
+
+- **v1.5.0 — Autonomous Runtime Integration** ✅ Current
+- **v1.6.0 — Real GitHub Issue Automation** — Planned
+- **v1.7.0 — Deep Repository Intelligence** — Planned
+- **v1.8.0 — Agent Intelligence and Engineering Memory** — Planned
+- **v1.9.0 — Evaluation and Reliability** — Planned
+- **v2.0.0 — Production Hardening** — Planned
 
 ## Core Capabilities
 
@@ -394,36 +395,31 @@ docs/
 ├── ROADMAP_V140_CONSOLIDATED.md
 ├── ROADMAP_V150_TO_V200.md
 └── releases/
-    └── v2.0.0.md
+    └── v1.5.0.md
 
 scripts/
-└── validate_v200.py
+└── validate_v150.py
 ```
 
 ## Validation Status
 
-The v2.0.0 bundle was compatibility-tested in a reconstructed RedForge workspace using the available v1.x release overlays. The targeted v2 suite completed with **12 passing tests**, and `scripts/validate_v200.py` reported `ready: True`. Python compilation also passed for the bundle.
+RedForge AI v1.5.0 has been validated in the active repository with the full project quality gates:
 
-Because the active repository on your machine is the source of truth, run the complete project gates after copying this overlay before committing or tagging v1.5.0:
+- Editable package install: **PASS** (`redforge-ai==1.5.0`)
+- Ruff formatting/checks: **PASS**
+- MyPy: **PASS — 77 source files**
+- pytest: **49 passed**
+- `scripts/validate_v150.py`: **`ready: True`**
+- `git diff --check`: **PASS** (line-ending warnings only)
 
-```powershell
-python -m pip install -e ".[dev]"
-python -m ruff format .
-python -m ruff check .
-python -m mypy backend\redforge
-python -m pytest -q
-python scripts\validate_v150.py
-git diff --check
-```
-
-Do not create the v1.5.0 tag until all of those gates pass in the real repository.
+The v1.5 validator also confirms that the codebase contains capability foundations mapped to later roadmap stages. Those capabilities being present does **not** mean v1.6.0 through v2.0.0 have been released.
 
 ## Security and Isolation Note
 
 RedForge has two relevant execution-control layers:
 
 1. The production runtime provides application-level workspace restrictions, command authorization, environment sanitization, timeout controls, permissions, and policy enforcement.
-2. The Docker-based isolation layer remains available and is surfaced as runtime evidence in the v2 integration layer.
+2. The Docker-based isolation layer remains available and is surfaced as runtime evidence in the v1.5 autonomous runtime integration layer.
 
 Docker isolation improves the execution boundary, but the current implementation should not be presented as a complete hostile-code or kernel-level security sandbox.
 
@@ -432,6 +428,8 @@ Fully untrusted workloads require additional production hardening and an appropr
 ## Roadmap Status
 
 v1.5.0 begins the post-v1.4 integration roadmap. The codebase already contains foundations for several later roadmap capabilities, while future releases will focus on deeper integration, real-world automation, reliability evaluation, and production hardening.
+
+The internal `roadmap_v200` package name is retained as an implementation namespace for these forward-looking capability foundations. It does not indicate that RedForge AI v2.0.0 has been released.
 
 Live GitHub delivery still requires explicit credentials and egress authorization. Docker improves isolation but is not a claim of perfect hostile-code containment.
 
