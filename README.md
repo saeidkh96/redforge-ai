@@ -4,7 +4,7 @@
 
 # RedForge AI
 
-**Agentic Software Engineering Platform with verifiable autonomy, bounded repair, runtime policy enforcement, human-gated delivery, auditable execution, graph-based orchestration, and engineering memory.**
+**Agentic Software Engineering Platform with autonomous runtime integration, deep repository intelligence, specialized agents, engineering memory, evaluation, production policy, human approval, and audited GitHub delivery.**
 
 > **Generation proposes. Verification decides.**
 
@@ -12,13 +12,17 @@ RedForge AI is designed around a controlled software-engineering workflow rather
 
 **Issue → Repository Understanding → Plan → Code → Patch → Test → Repair → Advanced Verification → Runtime Policy → Risk Evaluation → Deterministic Review → Human Approval → Audit → GitHub Delivery**
 
-## v1.4.0 — Autonomous Engineering Roadmap Consolidation
+## v1.5.0 - Autonomous Runtime Integration
+RedForge AI v1.5.0 is the first integration milestone after v1.4.0. It connects the existing ForgeRun production pipeline with the autonomous graph, checkpointing, deeper impact analysis, engineering memory, specialized agent roles, Docker execution, evaluation foundations, and controlled release gating.
 
-RedForge AI v1.4.0 extends the existing end-to-end production workflow with a new autonomous-engineering capability layer.
+### Post-v1.4 Roadmap
 
-This release adds foundations for graph-based orchestration, checkpoint and resume, Docker-based isolated execution, repository impact analysis, multi-provider LLM routing, persistent engineering memory, GitHub issue autonomy planning, and a unified autonomous-engineering platform facade.
-
-The focus of v1.4.0 is capability consolidation while keeping generation, verification, policy, approval, and delivery responsibilities clearly separated.
+- **v1.5.0:** Autonomous Runtime Integration
+- **v1.6.0:** Real GitHub Issue Automation
+- **v1.7.0:** Deep Repository Intelligence
+- **v1.8.0:** Agent Intelligence and Engineering Memory
+- **v1.9.0:** Evaluation and Reliability
+- **v2.0.0:** Production Hardening and Release Gates
 
 ## Core Capabilities
 
@@ -84,7 +88,7 @@ The runtime model follows the boundary:
 
 ### Graph-Based Orchestration
 
-The v1.4.0 capability layer introduces `ForgeGraph` for autonomous workflow orchestration with:
+RedForge retains the `ForgeGraph` capability introduced earlier and v1.5.0 uses it as part of the integrated autonomy runtime:
 
 - named workflow nodes
 - conditional transitions
@@ -101,7 +105,7 @@ This provides a foundation for longer-running engineering workflows without maki
 
 ### Docker-Based Isolated Execution
 
-v1.4.0 adds a Docker execution layer with configurable controls such as:
+The Docker execution layer introduced earlier remains part of the v1.5.0 runtime boundary with configurable controls such as:
 
 - isolated container execution
 - network disabled by default
@@ -121,7 +125,7 @@ It is intentionally focused on Python import-level analysis and is not yet a ful
 
 ### LLM Routing and Fallback
 
-The v1.4.0 LLM router provides foundations for:
+The provider-independent LLM routing layer remains available for:
 
 - multiple model/provider candidates
 - provider priority
@@ -150,7 +154,7 @@ Live GitHub automation still depends on explicit credentials, network access, re
 
 **Understand → Plan → Code → Patch → Test → Repair → Verify → Policy → Risk → Review → Approval → Audit → Delivery**
 
-The v1.4.0 implementation provides the orchestration foundation and callback-based stage integration. Deeper production integration remains an ongoing engineering task.
+v1.5.0 adds `IntegratedAutonomyRuntime`, which connects the graph/checkpoint layer to the established `ForgeOrchestrator`, deep impact analysis, Docker execution evidence, release gating, and persistent engineering memory.
 
 ### Human Approval
 
@@ -267,7 +271,7 @@ Pull Request / Completed Run
 
 The central v1.3 execution record remains `ForgeRun`, which captures the issue, repository context, plan, patches, test results, repair attempts, findings, verification results, policy decisions, risk assessment, review consensus, pending approval actions, runtime evidence, delivery readiness, approval state, and pull-request information.
 
-v1.4.0 adds the `roadmap_v140` autonomous capability layer around this foundation, including graph orchestration, checkpointing, Docker execution, impact analysis, LLM routing, engineering memory, and autonomy planning.
+v1.5.0 integrates the `roadmap_v200` capability layer around the established v1.4 foundation, including deep multi-language impact analysis, specialized agents, GitHub issue intake, benchmark evaluation, release gating, and an integrated autonomy runtime.
 
 ## Quick Start
 
@@ -293,7 +297,7 @@ python -m ruff format .
 python -m ruff check .
 python -m pytest -q
 python -m mypy backend\redforge
-python scripts\validate_v140.py
+python scripts\validate_v150.py
 git diff --check
 ```
 
@@ -321,7 +325,7 @@ Forge workflow:
 - `POST /api/v1/forge/runs/{run_id}/reject`
 - `POST /api/v1/forge/runs/{run_id}/publish`
 
-v1.4.0 also includes autonomy API implementation for repository impact analysis and GitHub issue execution-envelope generation. Router registration should be verified in the deployed application configuration before treating these routes as externally available.
+v1.5.0 registers the autonomy router in `redforge.main` and adds deep impact analysis plus authenticated GitHub issue retrieval alongside the existing autonomy endpoints.
 
 ## Configuration
 
@@ -369,66 +373,52 @@ backend/redforge/
 ├── models/
 ├── production/
 ├── roadmap_v140/
-│   ├── autonomy.py
-│   ├── checkpoint.py
-│   ├── graph.py
+├── roadmap_v200/
+│   ├── agents.py
+│   ├── evaluation.py
+│   ├── github_live.py
+│   ├── hardening.py
 │   ├── intelligence.py
-│   ├── llm_router.py
-│   ├── memory.py
 │   ├── models.py
-│   ├── platform.py
-│   └── sandbox.py
+│   ├── runtime.py
+│   └── service.py
 ├── verification/
-│   └── advanced.py
 └── main.py
 
 tests/
-├── core/
-├── execution/
 ├── production/
-└── roadmap_v140/
+├── roadmap_v140/
+└── roadmap_v200/
 
 docs/
-├── releases/
-│   ├── v1.3.0.md
-│   └── v1.4.0.md
 ├── ROADMAP_V140_CONSOLIDATED.md
-├── PRODUCTION_GRADE_V120.md
-└── ROADMAP_V2.md
+├── ROADMAP_V150_TO_V200.md
+└── releases/
+    └── v1.5.0.md
 
 scripts/
-├── validate_v130.py
-└── validate_v140.py
+└── validate_v150.py
 ```
 
 ## Validation Status
 
-The v1.4.0 release was locally validated with:
+RedForge AI v1.5.0 has been validated in the active repository with the full project quality gates:
 
-- Ruff
-- pytest
-- MyPy
-- the v1.4.0 validation script
-- Git whitespace validation
+- Editable package install: **PASS** (`redforge-ai==1.5.0`)
+- Ruff formatting/checks: **PASS**
+- MyPy: **PASS — 77 source files**
+- pytest: **49 passed**
+- `scripts/validate_v150.py`: **`ready: True`**
+- `git diff --check`: **PASS** (line-ending warnings only)
 
-The final local validation completed with:
-
-- **40 passing tests**
-- **Ruff: PASS**
-- **MyPy: PASS across 68 source files**
-- **v1.4.0 validator: `ready: True`**
-- **`git diff --check`: PASS**
-
-The v1.4.0 validator confirmed the presence of graph orchestration, checkpointing, Docker sandbox command generation, impact analysis, engineering memory, and LLM routing.
-
-Bandit and Semgrep remain optional verification tools. Real GitHub delivery and autonomous external actions should be exercised only with explicitly configured repositories, credentials, runtime permissions, and network allow-lists.
+The v1.5 validator also confirms that the codebase contains capability foundations mapped to later roadmap stages. Those capabilities being present does **not** mean v1.6.0 through v2.0.0 have been released.
 
 ## Security and Isolation Note
 
 RedForge has two relevant execution-control layers:
 
 1. The production runtime provides application-level workspace restrictions, command authorization, environment sanitization, timeout controls, permissions, and policy enforcement.
-2. v1.4.0 adds Docker-based isolated execution with configurable network and resource controls.
+2. The Docker-based isolation layer remains available and is surfaced as runtime evidence in the v1.5 autonomous runtime integration layer.
 
 Docker isolation improves the execution boundary, but the current implementation should not be presented as a complete hostile-code or kernel-level security sandbox.
 
@@ -436,17 +426,11 @@ Fully untrusted workloads require additional production hardening and an appropr
 
 ## Roadmap Status
 
-v1.4.0 consolidates RedForge's planned autonomous-engineering capability layer into one milestone.
+v1.5.0 begins the post-v1.4 integration roadmap. The codebase already contains foundations for several later roadmap capabilities, while future releases will focus on deeper integration, real-world automation, reliability evaluation, and production hardening.
 
-The project now has foundations for graph orchestration, checkpoint/resume, isolated execution, deeper repository analysis, provider-independent LLM routing, engineering memory, GitHub autonomy planning, and autonomous engineering workflows.
+The internal `roadmap_v200` package name is retained as an implementation namespace for these forward-looking capability foundations. It does not indicate that RedForge AI v2.0.0 has been released.
 
-Further work focuses on deeper end-to-end integration, production hardening, live GitHub automation, stronger hostile-code isolation, richer cross-language repository intelligence, and real-world autonomous workflow evaluation.
-
-## Release
-
-- Version: **v1.4.0**
-- Merge commit: `b0b5de40ef442266205dcaa951842eaa40a51248`
-- Release theme: **Autonomous Engineering Roadmap Consolidation**
+Live GitHub delivery still requires explicit credentials and egress authorization. Docker improves isolation but is not a claim of perfect hostile-code containment.
 
 ## License
 
