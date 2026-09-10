@@ -13,16 +13,17 @@ RedForge AI is designed around a controlled software-engineering workflow rather
 **Issue → Repository Understanding → Plan → Code → Patch → Test → Repair → Advanced Verification → Runtime Policy → Risk Evaluation → Deterministic Review → Human Approval → Audit → GitHub Delivery**
 
 ## v1.5.0 - Autonomous Runtime Integration
-RedForge AI v1.5.0 is the first integration milestone after v1.4.0. It connects the existing ForgeRun production pipeline with the autonomous graph, checkpointing, deeper impact analysis, engineering memory, specialized agent roles, Docker execution, evaluation foundations, and controlled release gating.
 
-### Post-v1.4 Roadmap
+RedForge AI v1.5.0 is the first integration milestone after v1.4.0. It connects the existing ForgeRun production pipeline with autonomous graph orchestration, checkpointing, repository impact analysis, engineering memory, Docker execution evidence, and controlled release gating.
 
-- **v1.5.0:** Autonomous Runtime Integration
-- **v1.6.0:** Real GitHub Issue Automation
-- **v1.7.0:** Deep Repository Intelligence
-- **v1.8.0:** Agent Intelligence and Engineering Memory
-- **v1.9.0:** Evaluation and Reliability
-- **v2.0.0:** Production Hardening and Release Gates
+## Roadmap
+
+- **v1.5.0 — Autonomous Runtime Integration** ✅ Current
+- **v1.6.0 — Real GitHub Issue Automation** — Planned
+- **v1.7.0 — Deep Repository Intelligence** — Planned
+- **v1.8.0 — Agent Intelligence and Engineering Memory** — Planned
+- **v1.9.0 — Evaluation and Reliability** — Planned
+- **v2.0.0 — Production Hardening** — Planned
 
 ## Core Capabilities
 
