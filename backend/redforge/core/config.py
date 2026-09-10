@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     app_name: str = "RedForge AI"
-    version: str = "1.3.0"
+    version: str = "1.5.0"
     environment: Literal["development", "test", "production"] = "development"
     host: str = "0.0.0.0"
     port: int = 8000
@@ -19,7 +19,6 @@ class Settings(BaseSettings):
 
     repair_on_failure: bool = True
     max_repair_attempts: int = 2
-
     production_runtime_enabled: bool = True
     advanced_verification_enabled: bool = True
     minimum_coverage: float = 70.0
@@ -29,6 +28,13 @@ class Settings(BaseSettings):
     multi_agent_required_approvals: int = 2
     e2e_integration_enabled: bool = True
     human_approval_risk_threshold: float = 20.0
+
+    autonomous_runtime_enabled: bool = True
+    deep_repository_intelligence_enabled: bool = True
+    engineering_memory_enabled: bool = True
+    docker_isolation_enabled: bool = True
+    github_live_automation_enabled: bool = False
+    evaluation_enabled: bool = True
 
     model_config = SettingsConfigDict(
         env_prefix="REDFORGE_",

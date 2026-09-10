@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 
+from redforge.api.autonomy import router as autonomy_router
 from redforge.api.forge import router as forge_router
 from redforge.api.health import router as health_router
 from redforge.api.repository import router as repository_router
@@ -16,3 +17,4 @@ app = FastAPI(
 app.include_router(health_router)
 app.include_router(repository_router)
 app.include_router(forge_router)
+app.include_router(autonomy_router)
