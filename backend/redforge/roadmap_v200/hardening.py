@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import json
 import re
 from pathlib import Path
 from typing import Any
@@ -12,6 +14,7 @@ class SecretRedactor:
         re.compile(r"(?i)(api[_-]?key|token|secret|password)\s*[:=]\s*([^\s,;]+)"),
         re.compile(r"gh[pousr]_[A-Za-z0-9_]{20,}"),
         re.compile(r"sk-[A-Za-z0-9_-]{20,}"),
+        re.compile(r"(?i)(authorization:\s*bearer\s+)[^\s]+"),
     )
 
     def redact(self, value: str) -> str:
@@ -24,6 +27,8 @@ class SecretRedactor:
     def _replace(match: re.Match[str]) -> str:
         if match.lastindex and match.lastindex >= 2:
             return f"{match.group(1)}=[REDACTED]"
+        if match.lastindex and match.lastindex >= 1:
+            return f"{match.group(1)}[REDACTED]"
         return "[REDACTED]"
 
 
@@ -32,12 +37,24 @@ class WorkspaceBoundary:
         self.root = Path(root).resolve()
 
     def require_inside(self, candidate: str | Path) -> Path:
-        resolved = Path(candidate).resolve()
+        raw = Path(candidate)
+        resolved = raw.resolve() if raw.is_absolute() else (self.root / raw).resolve()
         try:
             resolved.relative_to(self.root)
         except ValueError as exc:
             raise PermissionError(f"Path escapes workspace: {resolved}") from exc
         return resolved
+
+
+class EvidenceIntegrity:
+    @staticmethod
+    def digest(value: Any) -> str:
+        canonical = json.dumps(value, sort_keys=True, separators=(",", ":"), default=str)
+        return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+    @classmethod
+    def verify(cls, value: Any, digest: str) -> bool:
+        return cls.digest(value) == digest
 
 
 class ReleaseGateEvaluator:
@@ -60,4 +77,7 @@ class ReleaseGateEvaluator:
             and not approval_granted
         ):
             reasons.append("Required human approval is missing.")
-        return ReleaseGate(passed=not reasons, reasons=reasons)
+        evidence_hash = EvidenceIntegrity.digest(evidence)
+        if self.profile.require_integrity_evidence and not evidence_hash:
+            reasons.append("Evidence integrity digest is missing.")
+        return ReleaseGate(passed=not reasons, reasons=reasons, evidence_hash=evidence_hash)

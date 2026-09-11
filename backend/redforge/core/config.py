@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     app_name: str = "RedForge AI"
-    version: str = "1.5.0"
+    version: str = "1.6.0"
     environment: Literal["development", "test", "production"] = "development"
     host: str = "0.0.0.0"
     port: int = 8000
@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     engineering_memory_enabled: bool = True
     docker_isolation_enabled: bool = True
     github_live_automation_enabled: bool = False
+    github_auto_publish_enabled: bool = False
+    github_token: str | None = None
+    github_webhook_secret: str | None = None
+    github_automation_label: str = "redforge"
     evaluation_enabled: bool = True
 
     model_config = SettingsConfigDict(

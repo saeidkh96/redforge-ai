@@ -24,6 +24,8 @@ class GitHubIssueClient:
 
     def fetch_issue(self, owner: str, repo: str, issue_number: int) -> GitHubIssueSpec:
         data = self._request("GET", f"/repos/{owner}/{repo}/issues/{issue_number}")
+        if "pull_request" in data:
+            raise RuntimeError("Requested issue number is a pull request, not an issue.")
         raw_labels = data.get("labels", [])
         labels: list[str] = []
         if isinstance(raw_labels, list):
@@ -34,6 +36,7 @@ class GitHubIssueClient:
                         labels.append(name)
         title = data.get("title", "")
         body = data.get("body", "")
+        user = data.get("user")
         return GitHubIssueSpec(
             owner=owner,
             repo=repo,
@@ -41,6 +44,8 @@ class GitHubIssueClient:
             title=title if isinstance(title, str) else str(title),
             body=body if isinstance(body, str) else "",
             labels=labels,
+            html_url=str(data.get("html_url") or "") or None,
+            sender=str(user.get("login") or "") if isinstance(user, dict) else None,
         )
 
     def comment(self, issue: GitHubIssueSpec, body: str) -> str | None:
@@ -85,7 +90,7 @@ class GitHubIssueClient:
 
 
 class GitHubAutonomyRunner:
-    """Issue -> workspace -> ForgeRun -> optional audited branch/commit/push/PR."""
+    """Real GitHub issue -> isolated workspace -> verified RedForge run -> optional PR."""
 
     def __init__(
         self,
@@ -110,12 +115,35 @@ class GitHubAutonomyRunner:
         apply_patch: bool = True,
         publish: bool = False,
         actor: str = "redforge-agent",
+        comment_status: bool = False,
     ) -> AutonomousRunReport:
         issue_spec = self.client.fetch_issue(owner, repo, issue_number)
-        event = GitHubIssueEvent(**issue_spec.model_dump())
+        return self.run_spec(
+            issue_spec,
+            generate_patch=generate_patch,
+            apply_patch=apply_patch,
+            publish=publish,
+            actor=actor,
+            comment_status=comment_status,
+        )
+
+    def run_spec(
+        self,
+        issue_spec: GitHubIssueSpec,
+        *,
+        generate_patch: bool = True,
+        apply_patch: bool = True,
+        publish: bool = False,
+        actor: str = "redforge-agent",
+        comment_status: bool = False,
+    ) -> AutonomousRunReport:
+        event = GitHubIssueEvent(**issue_spec.model_dump(exclude={"html_url"}))
         planner = GitHubAutonomyPlanner()
         workspace = self.workspace_root / planner.workspace_name(event)
         self._ensure_repository(workspace, planner.repository_url(event))
+
+        if comment_status:
+            self.client.comment(issue_spec, "RedForge AI started a verified engineering run.")
 
         report = IntegratedAutonomyRuntime(workspace, provider=self.provider).run_issue(
             Issue(title=issue_spec.title, body=issue_spec.body, labels=issue_spec.labels),
@@ -143,12 +171,20 @@ class GitHubAutonomyRunner:
             allowed_egress_hosts=settings.egress_host_set,
             audit_path=settings.audit_log_path,
         )
-        result = GitHubWorkflow(owner=owner, repo=repo, token=self.token).publish(
+        result = GitHubWorkflow(
+            owner=issue_spec.owner,
+            repo=issue_spec.repo,
+            token=self.token,
+        ).publish(
             workspace,
             branch=branch,
-            commit_message=f"feat: resolve issue #{issue_number} with RedForge",
+            commit_message=f"feat: resolve issue #{issue_spec.issue_number} with RedForge",
             title=issue_spec.title,
-            body=f"Automated RedForge change for issue #{issue_number}.",
+            body=(
+                f"Automated RedForge change for issue #{issue_spec.issue_number}.\n\n"
+                f"Run ID: `{report.run_id}`\n"
+                f"Verification gate: `{bool(report.gate and report.gate.passed)}`"
+            ),
             create_pr=True,
             runtime=runtime,
         )
@@ -160,11 +196,16 @@ class GitHubAutonomyRunner:
             "commit_created": result.commit_created,
             "pull_request_url": report.pull_request_url,
         }
+        if comment_status and report.pull_request_url:
+            self.client.comment(
+                issue_spec, f"RedForge AI created a verified PR: {report.pull_request_url}"
+            )
         return report
 
     @staticmethod
     def _ensure_repository(workspace: Path, repository_url: str) -> None:
         if (workspace / ".git").exists():
+            subprocess.run(["git", "-C", str(workspace), "fetch", "--prune"], check=False)
             return
         if workspace.exists() and any(workspace.iterdir()):
             raise RuntimeError(f"Workspace exists and is not a Git repository: {workspace}")
