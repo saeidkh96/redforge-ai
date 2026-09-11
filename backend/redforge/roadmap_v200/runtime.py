@@ -9,9 +9,15 @@ from redforge.core.orchestrator import ForgeOrchestrator
 from redforge.models import ForgeRun, Issue, RunStatus
 from redforge.roadmap_v140 import CheckpointStore, DockerSandbox, ForgeGraph, GraphCheckpoint
 from redforge.roadmap_v140.memory import EngineeringMemory
+from redforge.roadmap_v200.evaluation import BenchmarkEvaluator, ReliabilityHistory
 from redforge.roadmap_v200.hardening import ReleaseGateEvaluator
 from redforge.roadmap_v200.intelligence import DeepRepositoryAnalyzer
-from redforge.roadmap_v200.models import AutonomousRunReport, DeepImpactReport, ReleaseGate
+from redforge.roadmap_v200.models import (
+    AutonomousRunReport,
+    BenchmarkCase,
+    DeepImpactReport,
+    ReleaseGate,
+)
 
 
 class IntegratedAutonomyRuntime:
@@ -35,6 +41,10 @@ class IntegratedAutonomyRuntime:
         )
         self.intelligence = DeepRepositoryAnalyzer()
         self.gates = ReleaseGateEvaluator()
+        self.evaluator = BenchmarkEvaluator()
+        self.reliability_history = ReliabilityHistory(
+            self.workspace / ".redforge" / "evaluation" / "reliability.jsonl"
+        )
         self.sandbox = DockerSandbox()
 
     def run_issue(
@@ -66,17 +76,24 @@ class IntegratedAutonomyRuntime:
 
     def _graph(self) -> ForgeGraph:
         graph = ForgeGraph(checkpoint_store=self.checkpoints)
+        graph.add_node("memory_recall", self._memory_recall_stage)
         graph.add_node("intelligence", self._intelligence_stage)
         graph.add_node("forge", self._forge_stage)
         graph.add_node("sandbox", self._sandbox_stage)
         graph.add_node("gate", self._gate_stage)
         graph.add_node("memory", self._memory_stage)
-        graph.set_entry("intelligence")
+        graph.set_entry("memory_recall")
+        graph.add_edge("memory_recall", "intelligence")
         graph.add_edge("intelligence", "forge")
         graph.add_edge("forge", "sandbox")
         graph.add_edge("sandbox", "gate")
         graph.add_edge("gate", "memory")
         return graph
+
+    def _memory_recall_stage(self, state: dict[str, Any]) -> dict[str, Any]:
+        issue = Issue.model_validate(state["issue"])
+        records = self.memory.search(issue.title, namespace="v2-runs")[:5]
+        return {"prior_engineering_memory": [record.model_dump(mode="json") for record in records]}
 
     def _intelligence_stage(self, state: dict[str, Any]) -> dict[str, Any]:
         report = self.intelligence.analyze(self.workspace, [])
@@ -139,7 +156,23 @@ class IntegratedAutonomyRuntime:
             namespace="v2-runs",
             tags=["forge-run", "autonomy", run.status.value],
         )
-        return {"memory_recorded": True}
+        case = BenchmarkCase(
+            name=f"forge-run:{run.id}",
+            expected_success=True,
+            expected_delivery_ready=True,
+            category="autonomous-run",
+        )
+        observation = self.evaluator.observe(
+            case,
+            actual_success=run.status not in {RunStatus.FAILED, RunStatus.REJECTED},
+            actual_delivery_ready=bool(run.delivery_ready and gate.passed),
+        )
+        metrics = self.evaluator.summarize([observation])
+        self.reliability_history.append(metrics)
+        return {
+            "memory_recorded": True,
+            "reliability": metrics.model_dump(mode="json"),
+        }
 
     def _report(self, checkpoint: GraphCheckpoint) -> AutonomousRunReport:
         state = checkpoint.state
@@ -157,12 +190,14 @@ class IntegratedAutonomyRuntime:
             pull_request_url=(run.pull_request.url if run and run.pull_request else None),
             impact=impact,
             gate=gate,
+            reliability=state.get("reliability"),
             evidence={
                 "checkpoint_run_id": checkpoint.run_id,
                 "checkpoint_completed": checkpoint.completed,
                 "checkpoint_failed": checkpoint.failed,
                 "docker": state.get("docker_evidence", {}),
                 "gate_evidence": state.get("gate_evidence", {}),
+                "prior_engineering_memory": state.get("prior_engineering_memory", []),
                 "forge_run": run.model_dump(mode="json") if run else None,
             },
         )
