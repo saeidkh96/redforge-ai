@@ -410,23 +410,18 @@ scripts/
 
 ## Validation Status
 
-The delivered v1.6.0 source bundle was compatibility-tested in this build environment:
+RedForge AI v1.6.0 has been validated on the merged `main` branch with the complete project quality gates:
 
-- Python compilation: **PASS**
+- Ruff: **PASS**
+- MyPy: **PASS — 78 source files**
 - pytest: **54 passed**
 - `scripts/validate_v160.py`: **`ready: True`**
+- `git diff --check`: **PASS**
+- Working tree: **clean**
 
-Run the complete release gates in the project Python 3.14 environment before tagging:
+The official `v1.6.0` tag points to the validated merge commit:
 
-```powershell
-python -m pip install -e ".[dev]"
-python -m ruff format .
-python -m ruff check .
-python -m mypy backend\redforge
-python -m pytest -q
-python scripts\validate_v160.py
-git diff --check
-```
+`9cd3c2450c2ec2177e24f700543da5c7a84cc16d`
 
 ## Security and Isolation Note
 
