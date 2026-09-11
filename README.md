@@ -232,47 +232,43 @@ RedForge provides primitives for:
 
 ## Architecture
 
-```text
-Issue
-  │
-  ▼
-Repository Intelligence
-  │
-  ▼
-Planner / Autonomous Graph
-  │
-  ▼
-Coding Agent
-  │
-  ▼
-Patch Validation / Application
-  │
-  ▼
-Test Orchestrator
-  │
-  ├── fail ──► Repair Agent ──► Retest
-  │
-  ▼
-Advanced Verification
-  │
-  ▼
-Runtime Policy / Risk Evaluation
-  │
-  ▼
-Deterministic Review Consensus
-  │
-  ▼
-Human Approval
-  │
-  ▼
-Tamper-Evident Audit
-  │
-  ▼
-Git / GitHub Delivery
-  │
-  ▼
-Pull Request / Completed Run
+```mermaid
+flowchart TD
+
+    ISSUE["GitHub Issue"]
+    REPO["Repository Intelligence"]
+    PLAN["Planner / Autonomous Graph"]
+    CODE["Coding Agent"]
+    PATCH["Patch Validation / Application"]
+    TEST["Test Orchestrator"]
+    REPAIR["Repair Agent"]
+    VERIFY["Advanced Verification"]
+    POLICY["Runtime Policy / Risk Evaluation"]
+    REVIEW["Deterministic Review Consensus"]
+    HUMAN["Human Approval"]
+    AUDIT["Tamper-Evident Audit"]
+    DELIVERY["Git / GitHub Delivery"]
+    DONE["Pull Request / Completed Run"]
+
+    ISSUE --> REPO
+    REPO --> PLAN
+    PLAN --> CODE
+    CODE --> PATCH
+    PATCH --> TEST
+
+    TEST -->|Passed| VERIFY
+    TEST -->|Failed| REPAIR
+    REPAIR -->|Retest| TEST
+
+    VERIFY --> POLICY
+    POLICY --> REVIEW
+    REVIEW --> HUMAN
+    HUMAN --> AUDIT
+    AUDIT --> DELIVERY
+    DELIVERY --> DONE
 ```
+
+**Generation proposes. Verification decides.**
 
 The central v1.3 execution record remains `ForgeRun`, which captures the issue, repository context, plan, patches, test results, repair attempts, findings, verification results, policy decisions, risk assessment, review consensus, pending approval actions, runtime evidence, delivery readiness, approval state, and pull-request information.
 
