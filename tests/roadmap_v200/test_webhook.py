@@ -38,3 +38,21 @@ def test_delivery_store_is_idempotent(tmp_path: Path) -> None:
     store = WebhookDeliveryStore(tmp_path / "deliveries.sqlite3")
     assert store.claim("abc") is True
     assert store.claim("abc") is False
+
+
+def test_failed_delivery_can_be_retried(tmp_path: Path) -> None:
+    store = WebhookDeliveryStore(tmp_path / "deliveries.sqlite3")
+    assert store.begin("retry-1") is True
+    assert store.status("retry-1") == "processing"
+    store.fail("retry-1", "temporary failure")
+    assert store.status("retry-1") == "failed"
+    assert store.begin("retry-1") is True
+    store.complete("retry-1")
+    assert store.status("retry-1") == "completed"
+    assert store.begin("retry-1") is False
+
+
+def test_processing_delivery_cannot_be_claimed_twice(tmp_path: Path) -> None:
+    store = WebhookDeliveryStore(tmp_path / "deliveries.sqlite3")
+    assert store.begin("in-flight") is True
+    assert store.begin("in-flight") is False

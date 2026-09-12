@@ -14,3 +14,12 @@ def test_deep_impact_api(tmp_path: Path) -> None:
     )
     assert response.status_code == 200
     assert response.json()["changed_files"] == ["a.py"]
+
+
+def test_live_issue_run_is_fail_closed_by_default() -> None:
+    response = client.post(
+        "/api/v1/autonomy/github-issue/run",
+        json={"owner": "o", "repo": "r", "issue_number": 1},
+    )
+    assert response.status_code == 403
+    assert response.json()["detail"] == "GitHub live automation is disabled."

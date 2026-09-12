@@ -12,6 +12,22 @@ RedForge AI is designed around a controlled software-engineering workflow rather
 
 **Issue → Repository Understanding → Plan → Code → Patch → Test → Repair → Advanced Verification → Runtime Policy → Risk Evaluation → Deterministic Review → Human Approval → Audit → GitHub Delivery**
 
+## v1.6.1 - Maintenance Hardening
+
+v1.6.1 is a focused maintenance patch for the completed autonomous-engineering milestone. It hardens live GitHub automation without expanding the product roadmap: live issue execution is fail-closed, credentials and workspace configuration are server-managed, automatic publication has a separate gate, and webhook delivery tracking supports safe retries after failed processing.
+
+### Hardening in v1.6.1
+
+- Live GitHub issue execution is disabled unless explicitly enabled by server configuration
+- GitHub tokens are no longer accepted in the live-run request body
+- Live-run workspaces are resolved from trusted server configuration
+- Automatic publication requires its own explicit configuration gate
+- Webhook deliveries track `processing`, `completed`, and `failed` states
+- Failed deliveries can be retried without weakening duplicate-delivery protection
+- Invalid webhook payloads fail with controlled client errors
+- Portable exception syntax is used across repository/security/verification analyzers
+- Obsolete staged v1.5→v2.0 roadmap documentation has been removed
+
 ## v1.6.0 - Autonomous Engineering Completion
 
 RedForge AI v1.6.0 consolidates the complete autonomous engineering capability set into the active runtime. Real GitHub Issues can enter the system through signed webhooks or authenticated API calls, repository changes are analyzed down to dependency, symbol, and Python call relationships, autonomous work is checkpointed and memory-aware, and delivery remains blocked behind verification, policy, review, audit, and human-approval gates.
@@ -298,7 +314,7 @@ python -m ruff format .
 python -m ruff check .
 python -m pytest -q
 python -m mypy backend\redforge
-python scripts\validate_v160.py
+python scripts\validate_v161.py
 git diff --check
 ```
 
@@ -397,27 +413,28 @@ docs/
 ├── IMPLEMENTATION_V160.md
 └── releases/
     ├── v1.5.0.md
-    └── v1.6.0.md
+    ├── v1.6.0.md
+    └── v1.6.1.md
 
 scripts/
 ├── validate_v150.py
-└── validate_v160.py
+├── validate_v160.py
+└── validate_v161.py
 ```
 
 ## Validation Status
 
-RedForge AI v1.6.0 has been validated on the merged `main` branch with the complete project quality gates:
+The v1.6.1 maintenance patch must pass the complete release gates before it is tagged:
 
-- Ruff: **PASS**
-- MyPy: **PASS — 78 source files**
-- pytest: **54 passed**
-- `scripts/validate_v160.py`: **`ready: True`**
-- `git diff --check`: **PASS**
-- Working tree: **clean**
+- Ruff format check
+- Ruff lint
+- MyPy
+- pytest
+- `scripts/validate_v161.py`
+- `git diff --check`
+- clean working tree after commit
 
-The official `v1.6.0` tag points to the validated merge commit:
-
-`9cd3c2450c2ec2177e24f700543da5c7a84cc16d`
+The previous official `v1.6.0` release remains tagged at merge commit `9cd3c2450c2ec2177e24f700543da5c7a84cc16d` until v1.6.1 is independently validated, merged, and tagged.
 
 ## Security and Isolation Note
 
@@ -432,9 +449,9 @@ Fully untrusted workloads require additional production hardening and an appropr
 
 ## Implementation Status
 
-The active package version is **1.6.0**. The internal `roadmap_v200` package name is retained as a historical implementation namespace; the capabilities in that package are integrated into the v1.6.0 runtime rather than being presented as separate future releases.
+The active package version is **1.6.1**. The internal `roadmap_v200` package name is retained as a historical implementation namespace; the capabilities in that package are integrated into the v1.6.0 runtime rather than being presented as separate future releases.
 
-Live GitHub publication remains opt-in and requires explicit credentials, allowed network egress, repository permissions, and all RedForge release gates to pass.
+Live GitHub automation and publication remain opt-in. Credentials and workspace roots are server-managed, publication has a separate explicit gate, and allowed network egress, repository permissions, and all RedForge release gates are still required.
 
 ## License
 
