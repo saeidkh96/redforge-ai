@@ -22,22 +22,86 @@ class GitHubWebhookVerifier:
 
 
 class WebhookDeliveryStore:
+    """Persistent webhook idempotency with retry-safe delivery states."""
+
     def __init__(self, path: str | Path) -> None:
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with sqlite3.connect(self.path) as db:
             db.execute(
                 "CREATE TABLE IF NOT EXISTS github_deliveries ("
-                "delivery_id TEXT PRIMARY KEY, processed_at TEXT DEFAULT CURRENT_TIMESTAMP)"
+                "delivery_id TEXT PRIMARY KEY, "
+                "status TEXT NOT NULL DEFAULT 'completed', "
+                "updated_at TEXT DEFAULT CURRENT_TIMESTAMP, "
+                "error TEXT)"
             )
+            columns = {row[1] for row in db.execute("PRAGMA table_info(github_deliveries)")}
+            if "status" not in columns:
+                db.execute(
+                    "ALTER TABLE github_deliveries "
+                    "ADD COLUMN status TEXT NOT NULL DEFAULT 'completed'"
+                )
+            if "updated_at" not in columns:
+                db.execute("ALTER TABLE github_deliveries ADD COLUMN updated_at TEXT")
+            if "error" not in columns:
+                db.execute("ALTER TABLE github_deliveries ADD COLUMN error TEXT")
+
+    def begin(self, delivery_id: str) -> bool:
+        """Claim a new or previously failed delivery.
+
+        Completed or currently processing deliveries are treated as duplicates.
+        Failed deliveries may be retried safely.
+        """
+        with sqlite3.connect(self.path) as db:
+            db.execute("BEGIN IMMEDIATE")
+            row = db.execute(
+                "SELECT status FROM github_deliveries WHERE delivery_id = ?",
+                (delivery_id,),
+            ).fetchone()
+            if row is None:
+                db.execute(
+                    "INSERT INTO github_deliveries(delivery_id, status, updated_at, error) "
+                    "VALUES (?, 'processing', CURRENT_TIMESTAMP, NULL)",
+                    (delivery_id,),
+                )
+                return True
+            if row[0] == "failed":
+                db.execute(
+                    "UPDATE github_deliveries SET status = 'processing', "
+                    "updated_at = CURRENT_TIMESTAMP, error = NULL WHERE delivery_id = ?",
+                    (delivery_id,),
+                )
+                return True
+            return False
+
+    def complete(self, delivery_id: str) -> None:
+        self._set_state(delivery_id, "completed", None)
+
+    def fail(self, delivery_id: str, error: str) -> None:
+        self._set_state(delivery_id, "failed", error[:2000])
+
+    def status(self, delivery_id: str) -> str | None:
+        with sqlite3.connect(self.path) as db:
+            row = db.execute(
+                "SELECT status FROM github_deliveries WHERE delivery_id = ?",
+                (delivery_id,),
+            ).fetchone()
+        return str(row[0]) if row else None
 
     def claim(self, delivery_id: str) -> bool:
-        try:
-            with sqlite3.connect(self.path) as db:
-                db.execute("INSERT INTO github_deliveries(delivery_id) VALUES (?)", (delivery_id,))
-            return True
-        except sqlite3.IntegrityError:
+        """Backward-compatible one-step claim used by older callers/tests."""
+        if not self.begin(delivery_id):
             return False
+        self.complete(delivery_id)
+        return True
+
+    def _set_state(self, delivery_id: str, status: str, error: str | None) -> None:
+        with sqlite3.connect(self.path) as db:
+            db.execute(
+                "UPDATE github_deliveries SET status = ?, updated_at = CURRENT_TIMESTAMP, "
+                "error = ? WHERE delivery_id = ?",
+                (status, error, delivery_id),
+            )
 
 
 class GitHubWebhookParser:
@@ -58,6 +122,9 @@ class GitHubWebhookParser:
         owner_data = repository.get("owner")
         owner = owner_data.get("login") if isinstance(owner_data, dict) else None
         repo = repository.get("name")
+        issue_number = int(issue.get("number", 0))
+        if not owner or not repo or issue_number < 1:
+            raise ValueError("Webhook payload contains invalid repository or issue identity.")
         labels_raw = issue.get("labels") or []
         labels = [
             str(item.get("name"))
@@ -68,9 +135,9 @@ class GitHubWebhookParser:
             delivery_id=delivery_id,
             action=action,
             issue=GitHubIssueSpec(
-                owner=str(owner or ""),
-                repo=str(repo or ""),
-                issue_number=int(issue.get("number", 0)),
+                owner=str(owner),
+                repo=str(repo),
+                issue_number=issue_number,
                 title=str(issue.get("title", "")),
                 body=str(issue.get("body") or ""),
                 labels=labels,

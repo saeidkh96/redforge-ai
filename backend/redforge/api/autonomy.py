@@ -39,8 +39,10 @@ class GitHubIssueFetchRequest(BaseModel):
     token: SecretStr
 
 
-class GitHubIssueRunRequest(GitHubIssueFetchRequest):
-    workspace_root: str
+class GitHubIssueRunRequest(BaseModel):
+    owner: str
+    repo: str
+    issue_number: int = Field(ge=1)
     generate_patch: bool = True
     apply_patch: bool = True
     publish: bool = False
@@ -88,10 +90,19 @@ def fetch_github_issue(request: GitHubIssueFetchRequest) -> GitHubIssueSpec:
 
 @router.post("/github-issue/run")
 def run_github_issue(request: GitHubIssueRunRequest) -> dict[str, Any]:
+    settings = get_settings()
+    if not settings.github_live_automation_enabled:
+        raise HTTPException(status_code=403, detail="GitHub live automation is disabled.")
+    if not settings.github_token:
+        raise HTTPException(status_code=503, detail="GitHub token is not configured.")
+    if request.publish and not settings.github_auto_publish_enabled:
+        raise HTTPException(status_code=403, detail="Automatic GitHub publication is disabled.")
+
+    workspace_root = Path(settings.workspace_root or ".redforge/workspaces").resolve()
     try:
         report = GitHubAutonomyRunner(
-            token=request.token.get_secret_value(),
-            workspace_root=request.workspace_root,
+            token=settings.github_token,
+            workspace_root=workspace_root,
         ).run(
             request.owner,
             request.repo,
@@ -123,7 +134,10 @@ async def github_webhook(
     if not x_github_delivery:
         raise HTTPException(status_code=400, detail="Missing X-GitHub-Delivery header.")
 
-    event = GitHubWebhookParser().parse(body, x_github_delivery)
+    try:
+        event = GitHubWebhookParser().parse(body, x_github_delivery)
+    except (ValueError, UnicodeDecodeError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     if settings.github_automation_label not in event.issue.labels:
         return {"accepted": False, "reason": "missing_automation_label"}
 
@@ -131,7 +145,7 @@ async def github_webhook(
     delivery_store = WebhookDeliveryStore(
         workspace_root / ".redforge" / "github-deliveries.sqlite3"
     )
-    if not delivery_store.claim(event.delivery_id):
+    if not delivery_store.begin(event.delivery_id):
         return {"accepted": False, "reason": "duplicate_delivery"}
 
     response: dict[str, Any] = {
@@ -139,18 +153,23 @@ async def github_webhook(
         "delivery_id": event.delivery_id,
         "issue": event.issue.model_dump(mode="json"),
     }
-    if settings.github_live_automation_enabled:
-        if not settings.github_token:
-            raise HTTPException(status_code=503, detail="GitHub token is not configured.")
-        report = GitHubAutonomyRunner(
-            token=settings.github_token,
-            workspace_root=workspace_root,
-        ).run_spec(
-            event.issue,
-            generate_patch=True,
-            apply_patch=True,
-            publish=settings.github_auto_publish_enabled,
-            comment_status=True,
-        )
-        response["report"] = report.model_dump(mode="json")
-    return response
+    try:
+        if settings.github_live_automation_enabled:
+            if not settings.github_token:
+                raise HTTPException(status_code=503, detail="GitHub token is not configured.")
+            report = GitHubAutonomyRunner(
+                token=settings.github_token,
+                workspace_root=workspace_root,
+            ).run_spec(
+                event.issue,
+                generate_patch=True,
+                apply_patch=True,
+                publish=settings.github_auto_publish_enabled,
+                comment_status=True,
+            )
+            response["report"] = report.model_dump(mode="json")
+        delivery_store.complete(event.delivery_id)
+        return response
+    except Exception as exc:
+        delivery_store.fail(event.delivery_id, str(exc))
+        raise
